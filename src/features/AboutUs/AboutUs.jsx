@@ -1,0 +1,1 @@
+import React from "react";\n\nexport default function AboutUs() {\n  return (\n    <div className="about-us">\n      <h2>About SheSTEAM</h2>\n      <p>Our mission is to empower girls in STEAM fields.</p>\n    </div>\n  );\n}

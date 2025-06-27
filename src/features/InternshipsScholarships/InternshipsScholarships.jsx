@@ -1,0 +1,1 @@
+import React from "react";\n\nexport default function InternshipsScholarships() {\n  return (\n    <div className="internships-scholarships">\n      <h2>Opportunities</h2>\n      <ul>\n        <li>Internship 1 - Description - <a href="#">Apply</a></li>\n        <li>Scholarship 1 - Description - <a href="#">Apply</a></li>\n      </ul>\n    </div>\n  );\n}
