@@ -1,9 +1,25 @@
+'use client';
 
 import React from 'react';
 import { Users, Briefcase, BookOpen, ArrowRight } from 'lucide-react';
 import { Button } from './ui/Button';
+import { useAuth } from '../hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const STEAMSections = () => {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLearnMore = () => {
+    if (!user) {
+      toast.error('Please login to access this feature');
+      router.push('/auth');
+      return;
+    }
+    router.push('/home');
+  };
+
   const sections = [
     {
       icon: Users,
@@ -73,6 +89,7 @@ const STEAMSections = () => {
                 <Button 
                   variant="ghost" 
                   className="group/btn text-purple-600 hover:text-purple-700 font-semibold p-0 h-auto"
+                  onClick={handleLearnMore}
                 >
                   Learn More 
                   <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover/btn:translate-x-1" />

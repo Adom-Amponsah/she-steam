@@ -1,8 +1,22 @@
-import React from 'react';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import { Button } from './ui/Button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 const Hero = () => {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const handleJoinClick = () => {
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth');
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 py-16 overflow-hidden">
       {/* Background decorative elements */}
@@ -33,8 +47,9 @@ const Hero = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
+                onClick={handleJoinClick}
               >
-                Join SheSTEAM <ArrowRight className="ml-2 w-5 h-5" />
+                {user ? 'Go to Dashboard' : 'Join SheSTEAM'} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               
               <Button 
@@ -51,7 +66,7 @@ const Hero = () => {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
               <img 
-                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                src="https://images.unsplash.com/photo-1705579608642-19a05c1b7b96?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 alt="Young woman in STEM field working with technology"
                 className="w-full h-96 lg:h-[500px] object-cover"
               />

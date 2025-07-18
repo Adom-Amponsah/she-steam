@@ -2,24 +2,26 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../hooks/useAuth';
-import Hero from '../components/Hero';
+import { useAuth } from '../../hooks/useAuth';
+import Home from '../../components/Home';
 
-export default function RootPage() {
+export default function HomePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    console.log('🏠 Root Page Auth State:', { 
+    console.log('🏠 Dashboard Auth State:', { 
       isLoading: loading, 
       isAuthenticated: !!user,
       userEmail: user?.email 
     });
 
-    if (!loading && user) {
-      // If user is authenticated, redirect to home/dashboard
-      console.log('✅ User authenticated, redirecting to home:', user.email);
-      router.push('/home');
+    if (!loading && !user) {
+      // If not authenticated, redirect to auth page
+      console.log('🔒 No authenticated user, redirecting to auth page...');
+      router.push('/auth');
+    } else if (!loading && user) {
+      console.log('✅ User authenticated, showing dashboard:', user.email);
     }
   }, [user, loading, router]);
 
@@ -31,11 +33,9 @@ export default function RootPage() {
     );
   }
 
-  // If not authenticated, show Hero section
   if (!user) {
-    return <Hero />;
+    return null;
   }
 
-  // This will briefly show while redirecting to /home
-  return null;
-}
+  return <Home />;
+} 
