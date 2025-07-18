@@ -6,7 +6,7 @@ import { Play, Users, ArrowRight, Quote, Sparkles, Award, Trophy } from 'lucide-
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import FeaturedVideo from './FeaturedVideo';
-import Competitions from './Competitions';
+import MentorsPage from '../app/mentors/page';
 import Header from './Header';
 
 const Home = () => {
@@ -58,15 +58,15 @@ const Home = () => {
               Home
             </button>
             <button
-              onClick={() => setActiveTab('competitions')}
+              onClick={() => setActiveTab('mentors')}
               className={`py-4 px-2 border-b-2 transition-colors flex items-center ${
-                activeTab === 'competitions'
+                activeTab === 'mentors'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-purple-600'
               }`}
             >
-              <Trophy className="w-4 h-4 mr-2" />
-              Competitions
+              <Users className="w-4 h-4 mr-2" />
+              Mentors
             </button>
           </div>
         </div>
@@ -143,14 +143,7 @@ const Home = () => {
                 linkText="Start Learning"
               />
 
-              <QuickActionCard
-                icon={Trophy}
-                title="Competitions"
-                description="Discover and participate in exciting STEAM competitions and challenges."
-                gradient="from-orange-500 to-amber-500"
-                linkText="View Competitions"
-                onClick={() => setActiveTab('competitions')}
-              />
+              
 
               <QuickActionCard
                 icon={Award}
@@ -163,7 +156,7 @@ const Home = () => {
             </section>
           </>
         ) : (
-          <Competitions />
+          <MentorsPage />
         )}
       </div>
     </div>

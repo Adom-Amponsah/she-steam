@@ -4,6 +4,45 @@ import React, { useState } from 'react';
 import { Linkedin, Mail, Globe, Twitter, X } from 'lucide-react';
 import { mentors } from '../../lib/mentor-data';
 
+const getInitials = (name) => {
+  if (!name) return '';
+  const names = name.split(' ');
+  const initials = names.map(n => n[0]).join('');
+  return initials.slice(0, 2).toUpperCase();
+};
+
+const Avatar = ({ src, name, className }) => {
+  const [imgError, setImgError] = useState(false);
+
+  const handleImgError = () => {
+    if (!imgError) {
+      setImgError(true);
+    }
+  };
+
+  // Reset error state if src changes
+  React.useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
+  if (imgError || !src || src.includes('placeholder.png')) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-purple-200 text-purple-700 font-bold text-4xl`}>
+        {getInitials(name)}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={`Portrait of ${name}`}
+      className={className}
+      onError={handleImgError}
+    />
+  );
+};
+
 const MentorModal = ({ mentor, onClose }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={onClose}>
     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
@@ -15,11 +54,10 @@ const MentorModal = ({ mentor, onClose }) => (
       <div className="p-8 md:p-12 flex-shrink-0">
         <div className="grid md:grid-cols-3 gap-8 items-center">
           <div className="md:col-span-1 text-center">
-            <img 
+            <Avatar 
               src={mentor.imageUrl} 
-              alt={`Portrait of ${mentor.name}`}
+              name={mentor.name}
               className="w-32 h-32 rounded-full mx-auto object-cover border-8 border-purple-100 shadow-md"
-              onError={(e) => { e.target.onerror = null; e.target.src='/images/mentors/placeholder.png'}}
             />
           </div>
           <div className="md:col-span-2 text-center md:text-left">
@@ -65,17 +103,14 @@ const MentorModal = ({ mentor, onClose }) => (
 );
 
 const MentorCard = ({ mentor, onClick }) => {
-  const isClickable = !!mentor.fullDescription;
-
   return (
     <div 
-      onClick={isClickable ? onClick : undefined} 
-      className={`bg-white rounded-2xl p-6 shadow-lg flex flex-col h-full ${isClickable ? 'hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer' : 'cursor-default'}`}>
-      <img 
+      onClick={onClick} 
+      className="bg-white rounded-2xl p-6 shadow-lg flex flex-col h-full hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+      <Avatar 
         src={mentor.imageUrl} 
-        alt={`Portrait of ${mentor.name}`}
+        name={mentor.name}
         className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-purple-100"
-        onError={(e) => { e.target.onerror = null; e.target.src='/images/mentors/placeholder.png'}}
       />
       <div className="text-center flex-grow">
         <h3 className="text-xl font-bold text-gray-900">{mentor.name}</h3>

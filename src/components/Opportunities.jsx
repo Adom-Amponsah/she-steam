@@ -2,9 +2,91 @@
 
 import React from 'react';
 import { Button } from './ui/Button';
-import { ArrowLeft, Calendar, MapPin, Award, Briefcase, GraduationCap, Trophy } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Award, Briefcase, GraduationCap, Trophy, ExternalLink, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
+
+const competitions = [
+  {
+    title: "Yaa Asantewaa Art Prize 2025",
+    organizer: "Gallery 1957",
+    deadline: "September 19, 2025",
+    email: "applications@gallery1957.com",
+    description: "Submit your artwork for the prestigious Yaa Asantewaa Art Prize.",
+    type: "Art"
+  },
+  {
+    title: "National Heritage Photo Competition 2025",
+    organizer: "Ministry of Tourism, Arts and Culture",
+    deadline: "Open",
+    email: "heritagesites@motac.gov.gh",
+    description: "Capture and showcase Ghana's rich cultural heritage through photography.",
+    type: "Photography"
+  },
+  {
+    title: "AIMS Girls in Mathematical Sciences Program (GMSP)",
+    organizer: "AIMS Ghana",
+    deadline: "2025",
+    link: "aims.edu.gh/girls-in-mathematical-sciences-programme",
+    description: "Join the prestigious program designed to empower girls in mathematical sciences.",
+    type: "Mathematics"
+  },
+  {
+    title: "Ghana STEM Explorer Prize (GSTEP) 2025",
+    organizer: "GSTEP",
+    deadline: "2025",
+    link: "www.gstep.org.gh",
+    description: "Showcase your STEM innovations and compete for the national prize.",
+    type: "STEM"
+  },
+  {
+    title: "Quantum Computing Challenge 2025",
+    organizer: "Quantum Initiative",
+    deadline: "2025",
+    link: "quantum2025.org/news-link/uncertain-sea-principle",
+    description: "Explore the frontiers of quantum computing in this innovative challenge.",
+    type: "Technology"
+  }
+];
+
+const CompetitionCard = ({ competition }) => (
+  <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+    <div className="flex items-start justify-between mb-4">
+      <div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{competition.title}</h3>
+        <p className="text-gray-600">{competition.organizer}</p>
+      </div>
+      <span className="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full text-sm font-medium">
+        {competition.type}
+      </span>
+    </div>
+
+    <p className="text-gray-600 mb-4">{competition.description}</p>
+
+    <div className="space-y-2 mb-4">
+      <div className="flex items-center text-gray-600">
+        <Calendar className="w-4 h-4 mr-2" />
+        <span>Deadline: {competition.deadline}</span>
+      </div>
+      {competition.email && (
+        <div className="flex items-center text-gray-600">
+          <Mail className="w-4 h-4 mr-2" />
+          <span>{competition.email}</span>
+        </div>
+      )}
+    </div>
+
+    {competition.link && (
+      <Button 
+        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+        onClick={() => window.open(`https://${competition.link}`, '_blank')}
+      >
+        <ExternalLink className="w-4 h-4 mr-2" />
+        Apply Now
+      </Button>
+    )}
+  </div>
+);
 
 const Opportunities = () => {
   const router = useRouter();
@@ -29,16 +111,6 @@ const Opportunities = () => {
       deadline: 'February 28, 2024',
       location: 'Lagos, Nigeria',
       bgColor: 'from-pink-500 to-rose-500'
-    },
-    {
-      id: 3,
-      type: 'Competition',
-      icon: Trophy,
-      title: 'African Girls Code Challenge',
-      description: 'Annual coding competition with cash prizes and mentorship opportunities.',
-      deadline: 'April 30, 2024',
-      location: 'Online',
-      bgColor: 'from-orange-500 to-amber-500'
     },
     {
       id: 4,
@@ -126,6 +198,10 @@ const Opportunities = () => {
                 <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Internships
               </TabsTrigger>
+              <TabsTrigger value="competitions" className="rounded-xl py-2 sm:py-3 px-4 sm:px-6 text-sm whitespace-nowrap">
+                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                Competitions
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -154,6 +230,14 @@ const Opportunities = () => {
                 .map((opportunity) => (
                   <OpportunityCard key={opportunity.id} opportunity={opportunity} />
                 ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="competitions">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {competitions.map((competition, index) => (
+                <CompetitionCard key={index} competition={competition} />
+              ))}
             </div>
           </TabsContent>
         </Tabs>
