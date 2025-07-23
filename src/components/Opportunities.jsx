@@ -89,6 +89,18 @@ const CompetitionCard = ({ competition }) => (
 );
 
 const Opportunities = () => {
+  const [selectedOpportunity, setSelectedOpportunity] = React.useState(null);
+  const [showDetailsModal, setShowDetailsModal] = React.useState(false);
+
+  function handleLearnMore(opportunity) {
+    setSelectedOpportunity(opportunity);
+    setShowDetailsModal(true);
+  }
+
+  function closeDetailsModal() {
+    setShowDetailsModal(false);
+    setSelectedOpportunity(null);
+  }
   const router = useRouter();
 
   const opportunities = [
@@ -144,6 +156,128 @@ const Opportunities = () => {
     }
   ];
 
+  // --- Modal State ---
+  const [showModal, setShowModal] = React.useState(false);
+  const [form, setForm] = React.useState({
+    type: '',
+    title: '',
+    description: '',
+    deadline: '',
+    location: '',
+
+    url: ''
+  });
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [success, setSuccess] = React.useState(false);
+  const [dynamicOpportunities, setDynamicOpportunities] = React.useState([]);
+
+  // --- Fetch dynamic opportunities from Supabase ---
+  React.useEffect(() => {
+    async function fetchOpportunities() {
+      try {
+        setLoading(true);
+        setError('');
+        const { data, error } = await (await import('../lib/supabaseClient')).default
+          .from('opportunities')
+          .select('*')
+          .order('created_at', { ascending: false });
+        console.log('[fetchOpportunities] Raw Supabase data:', data);
+        if (error) {
+          console.error('[fetchOpportunities] Supabase error:', error);
+          throw error;
+        }
+        // Map data to add icon and bgColor
+        const mapped = (data || []).map((opp) => ({
+          ...opp,
+          icon:
+            opp.type === 'Scholarship'
+              ? GraduationCap
+              : opp.type === 'Internship'
+              ? Briefcase
+              : opp.type === 'Career Program'
+              ? Award
+              : opp.type === 'Competition'
+              ? Trophy
+              : Briefcase,
+          bgColor:
+            opp.type === 'Scholarship'
+              ? 'from-purple-500 to-indigo-500'
+              : opp.type === 'Internship'
+              ? 'from-pink-500 to-rose-500'
+              : opp.type === 'Career Program'
+              ? 'from-blue-500 to-cyan-500'
+              : opp.type === 'Competition'
+              ? 'from-orange-500 to-yellow-500'
+              : 'from-purple-400 to-pink-400',
+          id: opp.id || opp.title,
+        }));
+        console.log('[fetchOpportunities] Mapped opportunities:', mapped);
+        setDynamicOpportunities(mapped);
+      } catch (err) {
+        setError('Could not load opportunities.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOpportunities();
+  }, [success]);
+
+  // --- Merge static and dynamic ---
+  // Assign bgColor by type at render time
+  function getBgColor(type) {
+    switch (type) {
+      case 'Scholarship': return 'from-purple-500 to-indigo-500';
+      case 'Internship': return 'from-pink-500 to-rose-500';
+      case 'Career Program': return 'from-blue-500 to-cyan-500';
+      case 'Competition': return 'from-orange-500 to-yellow-500';
+      default: return 'from-purple-400 to-pink-400';
+    }
+  }
+  const allOpportunities = [
+    ...dynamicOpportunities.map((opp) => ({
+      ...opp,
+      icon: opp.type === 'Scholarship'
+  ? GraduationCap
+  : opp.type === 'Internship'
+  ? Briefcase
+  : opp.type === 'Career Program'
+  ? Award
+  : opp.type === 'Competition'
+  ? Trophy
+  : Briefcase,
+      id: opp.id || opp.title,
+      bgColor: getBgColor(opp.type),
+    })),
+    ...opportunities,
+  ];
+
+  // --- Modal Form Handlers ---
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+    try {
+      const { error } = await (await import('../lib/supabaseClient')).default
+        .from('opportunities')
+        .insert([
+          { ...form }
+        ]);
+      if (error) throw error;
+      setSuccess(true);
+      setShowModal(false);
+      setForm({ type: '', title: '', description: '', deadline: '', location: '', url: '' });
+    } catch (err) {
+      setError('Could not add opportunity.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       {/* Header */}
@@ -168,6 +302,109 @@ const Opportunities = () => {
       </header>
 
       <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
+        {/* Add Opportunity Button */}
+        <div className="flex justify-end mb-6">
+          <Button
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-xl font-semibold text-base shadow-md"
+            onClick={() => setShowModal(true)}
+          >
+            + Add Opportunity
+          </Button>
+        </div>
+
+        {/* Modal Form */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-2 p-8 relative animate-fadeInUp">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
+                onClick={() => setShowModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-purple-700">Add New Opportunity</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Type</label>
+                  <select
+                    name="type"
+                    value={form.type}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 text-gray-900 bg-white"
+                    required
+                  >
+                    <option value="">Select type</option>
+                    <option value="Scholarship">Scholarship</option>
+                    <option value="Internship">Internship</option>
+                    <option value="Career Program">Career Program</option>
+                    <option value="Competition">Competition</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title</label>
+                  <input
+                    name="title"
+                    value={form.title}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 text-gray-900"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 text-gray-900"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Deadline</label>
+                  <input
+                    type="date"
+                    name="deadline"
+                    value={form.deadline}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Location</label>
+                  <input
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">URL</label>
+                  <input
+                    name="url"
+                    value={form.url}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all duration-200 text-gray-900"
+                  />
+                </div>
+                {error && <div className="text-red-500 text-sm">{error}</div>}
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold text-base shadow-md mt-2"
+                  disabled={loading}
+                >
+                  {loading ? 'Adding...' : 'Add Opportunity'}
+                </Button>
+                {success && <div className="text-green-600 text-sm mt-2">Opportunity added!</div>}
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Page Header */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full text-purple-800 font-medium mb-3 sm:mb-4 text-sm sm:text-base">
@@ -207,40 +444,89 @@ const Opportunities = () => {
 
           <TabsContent value="all">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {opportunities.map((opportunity) => (
-                <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+              {allOpportunities.map((opportunity) => (
+                <OpportunityCard key={opportunity.id} opportunity={opportunity} onLearnMore={handleLearnMore} />
               ))}
             </div>
           </TabsContent>
 
           <TabsContent value="scholarships">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {opportunities
+              {allOpportunities
                 .filter(opp => opp.type === 'Scholarship')
                 .map((opportunity) => (
-                  <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+                  <OpportunityCard key={opportunity.id} opportunity={opportunity} onLearnMore={handleLearnMore} />
                 ))}
             </div>
           </TabsContent>
 
           <TabsContent value="internships">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {opportunities
+              {allOpportunities
                 .filter(opp => opp.type === 'Internship')
                 .map((opportunity) => (
-                  <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+                  <OpportunityCard key={opportunity.id} opportunity={opportunity} onLearnMore={handleLearnMore} />
                 ))}
             </div>
           </TabsContent>
 
           <TabsContent value="competitions">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {allOpportunities
+                .filter(opp => opp.type === 'Competition')
+                .map((opportunity) => (
+                  <OpportunityCard key={opportunity.id} opportunity={opportunity} onLearnMore={handleLearnMore} />
+                ))}
               {competitions.map((competition, index) => (
                 <CompetitionCard key={index} competition={competition} />
               ))}
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Opportunity Details Modal */}
+        {showDetailsModal && selectedOpportunity && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-2 p-8 relative animate-fadeInUp">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
+                onClick={closeDetailsModal}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <div className={`bg-gradient-to-r ${selectedOpportunity.bgColor} p-4 rounded-xl mb-4 text-white flex items-center justify-between`}>
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">
+                  {selectedOpportunity.type}
+                </span>
+                {selectedOpportunity.icon && (
+                  <selectedOpportunity.icon className="w-6 h-6" />
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-purple-700 mb-2">{selectedOpportunity.title}</h2>
+              <p className="mb-4 text-gray-700">{selectedOpportunity.description}</p>
+              <div className="mb-2 flex items-center text-gray-600">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>Deadline: {selectedOpportunity.deadline}</span>
+              </div>
+              <div className="mb-2 flex items-center text-gray-600">
+                <MapPin className="w-4 h-4 mr-2" />
+                <span>Location: {selectedOpportunity.location}</span>
+              </div>
+              {selectedOpportunity.url && (
+                <div className="mb-2">
+                  <a href={selectedOpportunity.url.startsWith('http') ? selectedOpportunity.url : `https://${selectedOpportunity.url}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-purple-600 hover:underline flex items-center"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    {selectedOpportunity.url}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Bottom CTA */}
         <div className="text-center mt-12 sm:mt-16">
@@ -264,7 +550,7 @@ const Opportunities = () => {
 };
 
 // Extracted OpportunityCard component for better organization and reusability
-const OpportunityCard = ({ opportunity }) => {
+const OpportunityCard = ({ opportunity, onLearnMore }) => {
   const IconComponent = opportunity.icon;
   
   return (
@@ -299,6 +585,7 @@ const OpportunityCard = ({ opportunity }) => {
 
         <Button 
           className={`w-full bg-gradient-to-r ${opportunity.bgColor} hover:opacity-90 text-white font-semibold py-2.5 sm:py-3 rounded-xl text-sm sm:text-base transition-all duration-300 transform hover:scale-105`}
+          onClick={() => onLearnMore(opportunity)}
         >
           Learn More
         </Button>
